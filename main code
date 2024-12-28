@@ -1,0 +1,232 @@
+class Customer:
+    def __init__(self, name, email, address):
+        self.name = name
+        self.email = email
+        self.address = address
+        self.balance = 0
+        self.past_orders = []
+
+    def view_menu(self, menu):
+        for item, price in menu.items():
+            print(f"{item}: ${price}")
+
+    def place_order(self, menu, *items):
+        total_cost = 0
+        for item in items:
+            if item in menu:
+                total_cost += menu[item]
+            else:
+                print(f"{item} is not available in the menu.")
+                return
+        if total_cost <= self.balance:
+            self.balance -= total_cost
+            self.past_orders.extend(items)
+            print(f"Order placed! Total cost: ${total_cost}. Remaining balance: ${self.balance}")
+        else:
+            print("Insufficient balance. Please add more funds.")
+
+    def check_balance(self):
+        print(f"Available balance: ${self.balance}")
+
+    def add_funds(self, amount):
+        self.balance += amount
+        print(f"Funds added successfully! New balance: ${self.balance}")
+
+class Admin:
+    def __init__(self):
+        self.customers = []
+
+    def create_customer_account(self, name, email, address):
+        customer = Customer(name, email, address)
+        self.customers.append(customer)
+        print(f"Customer {name} added.")
+
+    def view_customers(self):
+        if not self.customers:
+            print("No customers registered.")
+            return
+        for idx, customer in enumerate(self.customers, start=1):
+            print(f"{idx}. Name: {customer.name}, Email: {customer.email}, Address: {customer.address}")
+
+    def remove_customer_account(self, email):
+        for customer in self.customers:
+            if customer.email == email:
+                self.customers.remove(customer)
+                print(f"Customer account with email {email} removed successfully.")
+                return
+        print(f"No customer found with email {email}.")
+
+    def modify_menu(self, menu, action, item=None, price=None):
+        if action == 'add' and item and price:
+            menu[item] = price
+            print(f"{item} added to menu at price ${price}.")
+        elif action == 'remove' and item:
+            if item in menu:
+                del menu[item]
+                print(f"{item} removed from menu.")
+            else:
+                print(f"{item} not found in menu.")
+        elif action == 'update' and item and price:
+            if item in menu:
+                menu[item] = price
+                print(f"{item} price updated to ${price}.")
+            else:
+                print(f"{item} not found in menu.")
+        else:
+            print("Invalid action or missing parameters.")
+
+class Restaurant:
+    def __init__(self):
+        self.menu = {}
+        self.admin = Admin()
+
+    def show_menu(self):
+        if not self.menu:
+            print("Menu is empty.")
+        else:
+            for item, price in self.menu.items():
+                print(f"{item}: ${price}")
+
+    def add_menu_item(self, item, price):
+        self.menu[item] = price
+        print(f"{item} added to menu at price ${price}.")
+
+    def remove_menu_item(self, item):
+        if item in self.menu:
+            del self.menu[item]
+            print(f"{item} removed from menu.")
+        else:
+            print(f"{item} not found in menu.")
+
+    def check_customer_details(self, email):
+        for customer in self.admin.customers:
+            if customer.email == email:
+                print(f"Name: {customer.name}, Email: {customer.email}, Address: {customer.address}, Balance: ${customer.balance}")
+                return
+        print(f"No customer found with email {email}.")
+
+class RestaurantManagementSystem:
+    def __init__(self):
+        self.restaurant = Restaurant()
+
+    def start(self):
+        while True:
+            print("\nRestaurant Management System")
+            print("1. Admin Login")
+            print("2. Customer Login")
+            print("3. Exit")
+            choice = input("Select an option: ")
+
+            if choice == "1":
+                self.admin_login()
+            elif choice == "2":
+                self.customer_login()
+            elif choice == "3":
+                print("Exiting system. Goodbye!")
+                break
+            else:
+                print("Invalid option. Try again.")
+
+    def admin_login(self):
+        name = input("Enter Admin Name: ")
+        print(f"Welcome Admin {name}")
+        while True:
+            print("\nAdmin Menu")
+            print("1. Create Customer Account")
+            print("2. Remove Customer Account")
+            print("3. View All Customers")
+            print("4. Manage Restaurant Menu")
+            print("5. Exit")
+            admin_choice = input("Select an option: ")
+
+            if admin_choice == "1":
+                name = input("Enter name: ")
+                email = input("Enter email: ")
+                address = input("Enter address: ")
+                self.restaurant.admin.create_customer_account(name, email, address)
+            elif admin_choice == "2":
+                email = input("Enter email to remove: ")
+                self.restaurant.admin.remove_customer_account(email)
+            elif admin_choice == "3":
+                self.restaurant.admin.view_customers()
+            elif admin_choice == "4":
+                self.manage_menu()
+            elif admin_choice == "5":
+                print("Exiting Admin Menu.")
+                break
+            else:
+                print("Invalid option.")
+
+    def manage_menu(self):
+        while True:
+            print("\nManage Restaurant Menu")
+            print("1. Add Item")
+            print("2. Remove Item")
+            print("3. Update Item")
+            print("4. View Menu")
+            print("5. Exit")
+            menu_choice = input("Select an option: ")
+
+            if menu_choice == "1":
+                item = input("Enter item name: ")
+                price = float(input("Enter item price: "))
+                self.restaurant.add_menu_item(item, price)
+            elif menu_choice == "2":
+                item = input("Enter item name to remove: ")
+                self.restaurant.remove_menu_item(item)
+            elif menu_choice == "3":
+                item = input("Enter item name to update: ")
+                price = float(input("Enter new price: "))
+                self.restaurant.admin.modify_menu(self.restaurant.menu, 'update', item, price)
+            elif menu_choice == "4":
+                self.restaurant.show_menu()
+            elif menu_choice == "5":
+                print("Exiting Menu Management.")
+                break
+            else:
+                print("Invalid option. Try again.")
+
+    def customer_login(self):
+        name = input("Enter Customer Username: ")
+        customer = next((c for c in self.restaurant.admin.customers if c.name == name), None)
+        if not customer:
+            print("Customer not found. Please register with the admin.")
+            return
+
+        print(f"Welcome {name}")
+        while True:
+            print("\nCustomer Menu")
+            print("1. View Restaurant Menu")
+            print("2. View Balance")
+            print("3. Add Balance")
+            print("4. Place Order")
+            print("5. View Past Orders")
+            print("6. Exit")
+            customer_choice = input("Select an option: ")
+
+            if customer_choice == "1":
+                customer.view_menu(self.restaurant.menu)
+            elif customer_choice == "2":
+                customer.check_balance()
+            elif customer_choice == "3":
+                amount = float(input("Enter amount to add: "))
+                customer.add_funds(amount)
+            elif customer_choice == "4":
+                items = input("Enter items to order (comma-separated): ").split(',')
+                customer.place_order(self.restaurant.menu, *[item.strip() for item in items])
+            elif customer_choice == "5":
+                if not customer.past_orders:
+                    print("No past orders.")
+                else:
+                    print("Past Orders:")
+                    for order in customer.past_orders:
+                        print(order)
+            elif customer_choice == "6":
+                print("Exiting Customer Menu.")
+                break
+            else:
+                print("Invalid option.")
+
+if __name__ == "__main__":
+    system = RestaurantManagementSystem()
+    system.start()
